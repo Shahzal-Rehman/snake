@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standalone Email Client</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Standalone Email Client</h1>
+        <form id="login-form">
+            <label for="username">Username:</label><br>
+            <input type="text" id="username" name="username" required><br>
+            <label for="password">Password:</label><br>
+            <input type="password" id="password" name="password" required><br>
+            <input type="submit" value="Login">
+        </form>
+
+        <div id="email-form-container" style="display: none;">
+            <h2>Compose Email</h2>
+            <form id="email-form">
+                <label for="subject">Subject:</label><br>
+                <input type="text" id="subject" name="subject" required><br>
+                <label for="body">Body:</label><br>
+                <textarea id="body" name="body" required></textarea><br>
+                <input type="submit" value="Send Email">
+            </form>
+        </div>
+
+        <div id="inbox" style="margin-top: 20px;"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
