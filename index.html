@@ -3,34 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Email Client</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Snake and Eating Balls Game</title>
+    <style>
+        /* CSS styles */
+        canvas {
+            border: 1px solid #000;
+            background-color: #eee;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Standalone Email Client</h1>
-        <form id="login-form">
-            <label for="username">Username:</label><br>
-            <input type="text" id="username" name="username" required><br>
-            <label for="password">Password:</label><br>
-            <input type="password" id="password" name="password" required><br>
-            <input type="submit" value="Login">
-        </form>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
 
-        <div id="email-form-container" style="display: none;">
-            <h2>Compose Email</h2>
-            <form id="email-form">
-                <label for="subject">Subject:</label><br>
-                <input type="text" id="subject" name="subject" required><br>
-                <label for="body">Body:</label><br>
-                <textarea id="body" name="body" required></textarea><br>
-                <input type="submit" value="Send Email">
-            </form>
-        </div>
+    <script>
+        // JavaScript code
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        <div id="inbox" style="margin-top: 20px;"></div>
-    </div>
-    
-    <script src="script.js"></script>
+        const snakeSize = 20;
+        const ballSize = 10;
+        const collisionMargin = 5; // Margin of error for collision detection
+
+        let snake = [{x: 10, y: 10}];
+        let direction = 'right';
+        let score = 0;
+        let food = generateFood();
+
+        function generateFood() {
+            return {
+                x: Math.floor(Math.random() * (canvas.width / snakeSize)) * snakeSize,
+                y: Math.floor(Math.random() * (canvas.height / snakeSize)) * snakeSize
+            };
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = '#00f';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, snakeSize, snakeSize);
+            });
+        }
+
+        function moveSnake() {
+            const head = {x: snake[0].x, y: snake[0].y};
+
+            // Update the head position based on the direction
+            if (direction === 'up') head.y -= snakeSize;
+            if (direction === 'down') head.y += snakeSize;
+            if (direction === 'left') head.x -= snakeSize;
+            if (direction === 'right') head.x += snakeSize;
+
+            // Check collision with walls
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                gameOver();
+                return;
+            }
+
+            // Check collision with itself
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameOver();
+                return;
+            }
+
+            // Check collision with food
+            if (head.x + collisionMargin >= food.x && head.x - collisionMargin <= food.x + ballSize &&
+                head.y + collisionMargin >= food.y && head.y - collisionMargin <= food.y + ballSize) {
+                snake.unshift(head);
+                score++;
+                food = generateFood();
+            } else {
+                // Remove the last segment and move the head
+                snake.pop();
+                snake.unshift(head);
+            }
+        }
+
+        function drawFood() {
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(food.x, food.y, ballSize, ballSize);
+        }
+
+        function drawScore() {
+            ctx.fillStyle = '#000';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, 10, 30);
+        }
+
+        function gameOver() {
+            clearInterval(gameLoop);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#000';
+            ctx.font = '30px Arial';
+            ctx.fillText('Game Over!', canvas.width / 2 - 100, canvas.height / 2);
+            ctx.fillText('Score: ' + score, canvas.width / 2 - 70, canvas.height / 2 + 40);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawSnake();
+            drawFood();
+            drawScore();
+            moveSnake();
+        }
+
+        // Handle keyboard input to change snake direction
+        window.addEventListener('keydown', function(event) {
+            if ((event.key === 'ArrowUp' || event.key === 'w') && direction !== 'down') direction = 'up';
+            if ((event.key === 'ArrowDown' || event.key === 's') && direction !== 'up') direction = 'down';
+            if ((event.key === 'ArrowLeft' || event.key === 'a') && direction !== 'right') direction = 'left';
+            if ((event.key === 'ArrowRight' || event.key === 'd') && direction !== 'left') direction = 'right';
+        });
+
+        // Handle touch input for mobile devices
+        let touchStartX, touchStartY;
+        window.addEventListener('touchstart', function(event) {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        });
+
+        window.addEventListener('touchend', function(event) {
+            const touchEndX = event.changedTouches[0].clientX;
+            const touchEndY = event.changedTouches[0].clientY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > 0 && direction !== 'left') direction = 'right';
+                else if (deltaX < 0 && direction !== 'right') direction = 'left';
+            } else {
+                if (deltaY > 0 && direction !== 'up') direction = 'down';
+                else if (deltaY < 0 && direction !== 'down') direction = 'up';
+            }
+        });
+
+        // Start the game loop
+        const gameLoopInterval = 150; // milliseconds (slower speed)
+        const gameLoopId = setInterval(gameLoop, gameLoopInterval);
+    </script>
 </body>
 </html>
