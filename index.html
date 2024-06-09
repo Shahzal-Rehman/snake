@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Bash Interface</title>
+    <title>Automated Azure VM Start</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -34,51 +34,29 @@
         button:hover {
             background-color: #45a049;
         }
-        #output {
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            max-width: 600px;
-            overflow-wrap: break-word;
-        }
     </style>
 </head>
 <body>
-    <h1>Online Bash Interface</h1>
+    <h1>Automated Azure VM Start</h1>
     <div class="container">
-        <textarea id="commands" placeholder="Paste your bash commands here"></textarea>
-        <button onclick="executeCommands()">Execute</button>
+        <textarea id="command" placeholder="Paste your 'az vm start' command here"></textarea>
+        <button onclick="executeCommand()">Execute</button>
     </div>
 
-    <div id="output"></div>
-
     <script>
-        function executeCommands() {
-            var commands = document.getElementById("commands").value.trim();
+        function executeCommand() {
+            var command = document.getElementById("command").value.trim();
+            var vmStartCommand = 'az vm start';
 
-            if (!commands) {
-                alert("Please enter some commands to execute.");
-                return;
+            if (command.indexOf(vmStartCommand) !== -1) {
+                // Execute the command
+                alert("Starting the Azure VM...");
+                // Add your logic to execute the command here
+                // For security reasons, executing commands directly from client-side JavaScript is not recommended.
+                // You would typically call a backend server, passing the command, and then execute it securely.
+            } else {
+                alert("Please provide an 'az vm start' command.");
             }
-
-            var token = Math.random().toString(36).substring(7);
-            var requestUrl = `https://shell.azure.com/api/script?script=${encodeURIComponent(commands)}&terminalId=${token}`;
-
-            fetch(requestUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error("Error:", data.error);
-                        document.getElementById("output").innerHTML = "<span style='color: red;'>Error: " + data.error + "</span>";
-                    } else {
-                        console.log("Output:", data.output);
-                        document.getElementById("output").innerHTML = data.output;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById("output").innerHTML = "<span style='color: red;'>An error occurred while executing commands.</span>";
-                });
         }
     </script>
 </body>
