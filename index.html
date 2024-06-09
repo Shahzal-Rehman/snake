@@ -1,146 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="google-adsense-account" content="ca-pub-7334601574145044">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake and Eating Balls Game</title>
+    <title>Online Bash Interface</title>
     <style>
-        /* CSS styles */
-        canvas {
-            border: 1px solid #000;
-            background-color: #eee;
-            display: block;
-            margin: 0 auto;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #output {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 600px;
+            overflow-wrap: break-word;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <h1>Online Bash Interface</h1>
+    <div class="container">
+        <textarea id="commands" placeholder="Paste your bash commands here"></textarea>
+        <button onclick="executeCommands()">Execute</button>
+    </div>
+
+    <div id="output"></div>
 
     <script>
-        // JavaScript code
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        function executeCommands() {
+            var commands = document.getElementById("commands").value.trim();
 
-        const snakeSize = 20;
-        const ballSize = 10;
-        const collisionMargin = 5; // Margin of error for collision detection
-
-        let snake = [{x: 10, y: 10}];
-        let direction = 'right';
-        let score = 0;
-        let food = generateFood();
-
-        function generateFood() {
-            return {
-                x: Math.floor(Math.random() * (canvas.width / snakeSize)) * snakeSize,
-                y: Math.floor(Math.random() * (canvas.height / snakeSize)) * snakeSize
-            };
-        }
-
-        function drawSnake() {
-            ctx.fillStyle = '#00f';
-            snake.forEach(segment => {
-                ctx.fillRect(segment.x, segment.y, snakeSize, snakeSize);
-            });
-        }
-
-        function moveSnake() {
-            const head = {x: snake[0].x, y: snake[0].y};
-
-            // Update the head position based on the direction
-            if (direction === 'up') head.y -= snakeSize;
-            if (direction === 'down') head.y += snakeSize;
-            if (direction === 'left') head.x -= snakeSize;
-            if (direction === 'right') head.x += snakeSize;
-
-            // Check collision with walls
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                gameOver();
+            if (!commands) {
+                alert("Please enter some commands to execute.");
                 return;
             }
 
-            // Check collision with itself
-            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-                gameOver();
-                return;
-            }
+            var token = Math.random().toString(36).substring(7);
+            var requestUrl = `https://shell.azure.com/api/script?script=${encodeURIComponent(commands)}&terminalId=${token}`;
 
-            // Check collision with food
-            if (head.x + collisionMargin >= food.x && head.x - collisionMargin <= food.x + ballSize &&
-                head.y + collisionMargin >= food.y && head.y - collisionMargin <= food.y + ballSize) {
-                snake.unshift(head);
-                score++;
-                food = generateFood();
-            } else {
-                // Remove the last segment and move the head
-                snake.pop();
-                snake.unshift(head);
-            }
+            fetch(requestUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error("Error:", data.error);
+                        document.getElementById("output").innerHTML = "<span style='color: red;'>Error: " + data.error + "</span>";
+                    } else {
+                        console.log("Output:", data.output);
+                        document.getElementById("output").innerHTML = data.output;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById("output").innerHTML = "<span style='color: red;'>An error occurred while executing commands.</span>";
+                });
         }
-
-        function drawFood() {
-            ctx.fillStyle = '#f00';
-            ctx.fillRect(food.x, food.y, ballSize, ballSize);
-        }
-
-        function drawScore() {
-            ctx.fillStyle = '#000';
-            ctx.font = '20px Arial';
-            ctx.fillText('Score: ' + score, 10, 30);
-        }
-
-        function gameOver() {
-            clearInterval(gameLoop);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#000';
-            ctx.font = '30px Arial';
-            ctx.fillText('Game Over!', canvas.width / 2 - 100, canvas.height / 2);
-            ctx.fillText('Score: ' + score, canvas.width / 2 - 70, canvas.height / 2 + 40);
-        }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawSnake();
-            drawFood();
-            drawScore();
-            moveSnake();
-        }
-
-        // Handle keyboard input to change snake direction
-        window.addEventListener('keydown', function(event) {
-            if ((event.key === 'ArrowUp' || event.key === 'w') && direction !== 'down') direction = 'up';
-            if ((event.key === 'ArrowDown' || event.key === 's') && direction !== 'up') direction = 'down';
-            if ((event.key === 'ArrowLeft' || event.key === 'a') && direction !== 'right') direction = 'left';
-            if ((event.key === 'ArrowRight' || event.key === 'd') && direction !== 'left') direction = 'right';
-        });
-
-        // Handle touch input for mobile devices
-        let touchStartX, touchStartY;
-        window.addEventListener('touchstart', function(event) {
-            touchStartX = event.touches[0].clientX;
-            touchStartY = event.touches[0].clientY;
-        });
-
-        window.addEventListener('touchend', function(event) {
-            const touchEndX = event.changedTouches[0].clientX;
-            const touchEndY = event.changedTouches[0].clientY;
-
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                if (deltaX > 0 && direction !== 'left') direction = 'right';
-                else if (deltaX < 0 && direction !== 'right') direction = 'left';
-            } else {
-                if (deltaY > 0 && direction !== 'up') direction = 'down';
-                else if (deltaY < 0 && direction !== 'down') direction = 'up';
-            }
-        });
-
-        // Start the game loop
-        const gameLoopInterval = 150; // milliseconds (slower speed)
-        const gameLoopId = setInterval(gameLoop, gameLoopInterval);
     </script>
 </body>
 </html>
